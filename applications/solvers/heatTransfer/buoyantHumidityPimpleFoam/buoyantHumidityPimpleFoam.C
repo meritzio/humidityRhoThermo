@@ -103,13 +103,6 @@ int main(int argc, char *argv[])
 
         fvModels.preUpdateMesh();
 
-        // Store momentum to set rhoUf for introduced faces.
-        autoPtr<volVectorField> rhoU;
-        if (rhoUf.valid())
-        {
-            rhoU = new volVectorField("rhoU", rho*U);
-        }
-
         // Update the mesh for topology change, mesh to mesh mapping
         mesh.update();
 
