@@ -32,12 +32,12 @@ Description
 
 #include "fvCFD.H"
 #include "humidityRhoThermo.H"
-#include "fluidThermoMomentumTransportModel.H"
+#include "momentumTransportModel.H"
 #include "fluidThermophysicalTransportModel.H"
 #include "radiationModel.H"
 #include "simpleControl.H"
-#include "pressureControl.H"
-#include "fvOptions.H"
+#include "fvModels.H"
+#include "fvConstraints.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

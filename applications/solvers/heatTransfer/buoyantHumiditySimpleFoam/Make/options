@@ -8,19 +8,22 @@ EXE_INC = \
     -I$(LIB_SRC)/MomentumTransportModels/momentumTransportModels/lnInclude \
     -I$(LIB_SRC)/MomentumTransportModels/compressible/lnInclude \
     -I$(LIB_SRC)/ThermophysicalTransportModels/lnInclude \
+    -I$(LIB_SRC)/transportModels/lnInclude \
     -I$(realpath ../../../../src/thermodynamic/basic/lnInclude)
 
 EXE_LIBS = \
     -lfiniteVolume \
-    -lfvOptions \
+    -lfvModels \
+    -lfvConstraints \
     -lsampling \
     -lmeshTools \
     -lthermophysicalTransportModels \
     -lfluidThermophysicalModels \
     -lspecie \
     -lradiationModels \
+    -ltransportModels \
     -lmomentumTransportModels \
-    -lfluidThermoMomentumTransportModels \
+    -lcompressibleMomentumTransportModels \
     -lmeshTools \
     -L$(FOAM_USER_LIBBIN) \
     -lhumidityRhoThermo

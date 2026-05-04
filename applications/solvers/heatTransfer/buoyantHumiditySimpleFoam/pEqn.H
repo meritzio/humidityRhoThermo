@@ -41,15 +41,15 @@ if (simple.transonic())
             fvc::div(phiHbyA) + fvm::div(phid, p_rgh)
           - fvm::laplacian(rhorAUf, p_rgh)
          ==
-            fvOptions(psi, p_rgh, rho.name());
+            fvModels.source(psi, p_rgh, rho.name());
 
         // Relax the pressure equation to ensure diagonal-dominance
         p_rghEqn.relax();
 
         p_rghEqn.setReference
         (
-            pressureControl.refCell(),
-            pressureControl.refValue()
+            pRefCell,
+            getRefCellValue(p_rgh, pRefCell)
         );
 
         p_rghEqn.solve();
@@ -63,12 +63,12 @@ else
             fvc::div(phiHbyA)
           - fvm::laplacian(rhorAUf, p_rgh)
           ==
-            fvOptions(psi, p_rgh, rho.name());
+            fvModels.source(psi, p_rgh, rho.name());
 
         p_rghEqn.setReference
         (
-            pressureControl.refCell(),
-            pressureControl.refValue()
+            pRefCell,
+            getRefCellValue(p_rgh, pRefCell)
         );
 
         p_rghEqn.solve();
@@ -77,7 +77,7 @@ else
 
 phi = phiHbyA + p_rghEqn.flux();
 
-p = p_rgh + rho*gh + pRef;
+p = p_rgh + rho*gh + pRefValue;
 
 #include "incompressible/continuityErrs.H"
 
@@ -88,9 +88,9 @@ p_rgh.relax();
 // calculated from the relaxed pressure
 U = HbyA + rAU*fvc::reconstruct((phig + p_rghEqn.flux())/rhorAUf);
 U.correctBoundaryConditions();
-fvOptions.correct(U);
+fvConstraints.constrain(U);
 
-pressureControl.limit(p);
+fvConstraints.constrain(p);
 
 // For closed-volume compressible cases adjust the pressure level
 // to obey overall mass continuity
@@ -98,7 +98,7 @@ if (closedVolume && !thermo.incompressible())
 {
     p += (initialMass - fvc::domainIntegrate(thermo.rho()))
         /fvc::domainIntegrate(psi);
-    p_rgh = p - rho*gh - pRef;
+    p_rgh = p - rho*gh - pRefValue;
     p.correctBoundaryConditions();
 }
 

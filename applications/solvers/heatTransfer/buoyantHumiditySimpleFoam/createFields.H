@@ -57,8 +57,6 @@ autoPtr<fluidThermophysicalTransportModel> thermophysicalTransport
 #include "readGravitationalAcceleration.H"
 #include "readhRef.H"
 #include "gh.H"
-#include "readpRef.H"
-
 
 Info<< "Reading field p_rgh\n" << endl;
 volScalarField p_rgh
@@ -74,17 +72,12 @@ volScalarField p_rgh
     mesh
 );
 
-// Force p_rgh to be consistent with p
-p_rgh = p - rho*gh - pRef;
+label pRefCell(0);
+scalar pRefValue(0.0);
+setRefCell(p, p_rgh, simple.dict(), pRefCell, pRefValue);
 
-pressureControl pressureControl
-(
-    p,
-    p_rgh,
-    rho,
-    simple.dict(),
-    thermo.incompressible()
-);
+// Force p_rgh to be consistent with p
+p_rgh = p - rho*gh - pRefValue;
 
 mesh.setFluxRequired(p_rgh.name());
 
@@ -92,4 +85,5 @@ dimensionedScalar initialMass = fvc::domainIntegrate(rho);
 
 #include "createMRF.H"
 #include "createRadiationModel.H"
-#include "createFvOptions.H"
+#include "createFvModels.H"
+#include "createFvConstraints.H"
