@@ -504,7 +504,7 @@ void Foam::humidityRhoThermo::implementation::readMethod()
 void Foam::humidityRhoThermo::implementation::readOrInitSpecificHumidity()
 {
     // specificHumidity field is available and was read before
-    if (specificHumidity_.typeHeaderOk<volScalarField>())
+    if (specificHumidity_.headerOk())
     {
         Info<< "Initilize humidity by using the thermo:specificHumidity field\n"
             << endl;
@@ -513,7 +513,7 @@ void Foam::humidityRhoThermo::implementation::readOrInitSpecificHumidity()
     }
 
     // Relative humidity field not provided
-    if (!relHum_.typeHeaderOk<volScalarField>())
+    if (!relHum_.headerOk())
     {
         FatalErrorInFunction
             << "Neither the thermo:specificHumidity or the thermo:relHum "

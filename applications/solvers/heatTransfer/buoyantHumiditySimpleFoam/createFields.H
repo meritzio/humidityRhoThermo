@@ -79,7 +79,7 @@ setRefCell(p, p_rgh, simple.dict(), pRefCell, pRefValue);
 // Force p_rgh to be consistent with p
 p_rgh = p - rho*gh - pRefValue;
 
-mesh.setFluxRequired(p_rgh.name());
+mesh.schemes().setFluxRequired(p_rgh.name());
 
 dimensionedScalar initialMass = fvc::domainIntegrate(rho);
 

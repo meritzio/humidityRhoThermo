@@ -1,7 +1,5 @@
-if (!mesh.steady() && !pimple.simpleRho())
-{
-    rho = thermo.rho();
-}
+rho = thermo.rho();
+rho.relax();
 
 // Thermodynamic density needs to be updated by psi*d(p) after the
 // pressure solution
@@ -9,6 +7,7 @@ const volScalarField psip0(psi*p);
 
 const volScalarField rAU("rAU", 1.0/UEqn.A());
 const surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho*rAU));
+
 volVectorField HbyA(constrainHbyA(rAU*UEqn.H(), U, p_rgh));
 
 if (pimple.nCorrPiso() <= 1)
@@ -25,7 +24,7 @@ surfaceScalarField phiHbyA
 
 MRF.makeRelative(fvc::interpolate(rho), phiHbyA);
 
-bool adjustMass = mesh.steady() && adjustPhi(phiHbyA, U, p_rgh);
+bool adjustMass = mesh.schemes().steady() && adjustPhi(phiHbyA, U, p_rgh);
 
 surfaceScalarField phig(-rhorAUf*ghf*fvc::snGrad(rho)*mesh.magSf());
 
@@ -103,7 +102,7 @@ p_rgh.relax();
 
 p = p_rgh + rho*gh + pRef;
 
-if (mesh.steady())
+if (mesh.schemes().steady())
 {
     #include "incompressible/continuityErrs.H"
 }
@@ -130,7 +129,7 @@ U.correctBoundaryConditions();
 fvConstraints.constrain(U);
 K = 0.5*magSqr(U);
 
-if (mesh.steady())
+if (mesh.schemes().steady())
 {
     fvConstraints.constrain(p);
 }
@@ -145,12 +144,12 @@ if (adjustMass && !thermo.incompressible())
     p.correctBoundaryConditions();
 }
 
-if (mesh.steady() || pimple.simpleRho() || adjustMass)
+if (mesh.schemes().steady() || pimple.simpleRho())
 {
     rho = thermo.rho();
 }
 
-if ((mesh.steady() || pimple.simpleRho()) && !pimple.transonic())
+if (mesh.schemes().steady() || pimple.simpleRho())
 {
     rho.relax();
 }

@@ -35,9 +35,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "dynamicFvMesh.H"
 #include "humidityRhoThermo.H"
-#include "dynamicMomentumTransportModel.H"
+#include "compressibleMomentumTransportModels.H"
 #include "fluidThermophysicalTransportModel.H"
 #include "pimpleControl.H"
 #include "pressureReference.H"
@@ -56,7 +55,7 @@ int main(int argc, char *argv[])
 
     #include "setRootCaseLists.H"
     #include "createTime.H"
-    #include "createDynamicFvMesh.H"
+    #include "createMesh.H"
     #include "createDyMControls.H"
     #include "initContinuityErrs.H"
     #include "createFields.H"
@@ -102,6 +101,18 @@ int main(int argc, char *argv[])
             #include "setDeltaT.H"
         }
 
+        fvModels.preUpdateMesh();
+
+        // Store momentum to set rhoUf for introduced faces.
+        autoPtr<volVectorField> rhoU;
+        if (rhoUf.valid())
+        {
+            rhoU = new volVectorField("rhoU", rho*U);
+        }
+
+        // Update the mesh for topology change, mesh to mesh mapping
+        mesh.update();
+
         runTime++;
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
@@ -109,85 +120,59 @@ int main(int argc, char *argv[])
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
-            if (!pimple.flow())
+            if (pimple.firstPimpleIter() || moveMeshOuterCorrectors)
             {
-                if (pimple.models())
-                {
-                    fvModels.correct();
-                }
+                // Move the mesh
+                mesh.move();
 
-                if (pimple.thermophysics())
+                if (mesh.changing())
                 {
-                    #include "EEqn.H"
+                    MRF.update();
+
+                    if (correctPhi)
+                    {
+                        #include "correctPhi.H"
+                    }
+
+                    if (checkMeshCourantNo)
+                    {
+                        #include "meshCourantNo.H"
+                    }
                 }
+	    }
+
+            if
+            (
+                   !mesh.schemes().steady()
+                && !pimple.simpleRho()
+                && pimple.firstPimpleIter()
+            )
+            {
+                #include "rhoEqn.H"
             }
-            else
+
+            fvModels.correct();
+
+            #include "UEqn.H"
+            #include "EEqn.H"
+
+            // --- Pressure corrector loop
+            while (pimple.correct())
             {
-                if (pimple.firstPimpleIter() || moveMeshOuterCorrectors)
-                {
-                    // Store momentum to set rhoUf for introduced faces.
-                    autoPtr<volVectorField> rhoU;
-                    if (rhoUf.valid())
-                    {
-                        rhoU = new volVectorField("rhoU", rho*U);
-                    }
+                #include "pEqn.H"
+            }
 
-                    fvModels.preUpdateMesh();
-
-                    // Do any mesh changes
-                    mesh.update();
-
-                    if (mesh.changing())
-                    {
-                        gh = (g & mesh.C()) - ghRef;
-                        ghf = (g & mesh.Cf()) - ghRef;
-
-                        MRF.update();
-
-                        if (correctPhi)
-                        {
-                            #include "correctPhi.H"
-                        }
-
-                        if (checkMeshCourantNo)
-                        {
-                            #include "meshCourantNo.H"
-                        }
-                    }
-                }
-
-                if (pimple.firstPimpleIter() && !pimple.simpleRho())
-                {
-                    #include "rhoEqn.H"
-                }
-
-                if (pimple.models())
-                {
-                    fvModels.correct();
-                }
-
-                #include "UEqn.H"
-
-                if (pimple.thermophysics())
-                {
-                    #include "EEqn.H"
-                }
-
-                // --- Pressure corrector loop
-                while (pimple.correct())
-                {
-                    #include "pEqn.H"
-                }
-
-                if (pimple.turbCorr())
-                {
-                    turbulence->correct();
-                    thermophysicalTransport->correct();
-                }
+            if (pimple.turbCorr())
+            {
+                turbulence->correct();
+                thermophysicalTransport->correct();
             }
         }
 
-        rho = thermo.rho();
+        if (!mesh.schemes().steady())
+        {
+            rho = thermo.rho();
+        }
 
         runTime.write();
 

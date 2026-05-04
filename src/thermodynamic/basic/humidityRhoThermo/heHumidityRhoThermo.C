@@ -43,7 +43,7 @@ void Foam::heHumidityRhoThermo<BasicPsiThermo, MixtureType>::calculate()
     scalarField& CvCells = this->Cv_.primitiveFieldRef();
     scalarField& psiCells = this->psi_.primitiveFieldRef();
     scalarField& muCells = this->mu_.primitiveFieldRef();
-    scalarField& alphaCells = this->alpha_.primitiveFieldRef();
+    scalarField& kappaCells = this->kappa_.primitiveFieldRef();
 
     forAll(TCells, celli)
     {
@@ -64,9 +64,8 @@ void Foam::heHumidityRhoThermo<BasicPsiThermo, MixtureType>::calculate()
         CvCells[celli] = thermoMixture.Cv(pCells[celli], TCells[celli]);
         psiCells[celli] = thermoMixture.psi(pCells[celli], TCells[celli]);
         muCells[celli] = transportMixture.mu(pCells[celli], TCells[celli]);
-        alphaCells[celli] =
-            transportMixture.kappa(pCells[celli], TCells[celli])
-           /thermoMixture.Cp(pCells[celli], TCells[celli]);
+        kappaCells[celli] =
+            transportMixture.kappa(pCells[celli], TCells[celli]);
     }
 
     volScalarField::Boundary& pBf =
@@ -89,8 +88,8 @@ void Foam::heHumidityRhoThermo<BasicPsiThermo, MixtureType>::calculate()
     volScalarField::Boundary& muBf =
         this->mu_.boundaryFieldRef();
 
-    volScalarField::Boundary& alphaBf =
-        this->alpha_.boundaryFieldRef();
+    volScalarField::Boundary& kappaBf =
+        this->kappa_.boundaryFieldRef();
 
     forAll(this->T_.boundaryField(), patchi)
     {
@@ -101,7 +100,7 @@ void Foam::heHumidityRhoThermo<BasicPsiThermo, MixtureType>::calculate()
         fvPatchScalarField& ppsi = psiBf[patchi];
         fvPatchScalarField& phe = heBf[patchi];
         fvPatchScalarField& pmu = muBf[patchi];
-        fvPatchScalarField& palpha = alphaBf[patchi];
+        fvPatchScalarField& pkappa = kappaBf[patchi];
 
         if (pT.fixesValue())
         {
@@ -121,9 +120,7 @@ void Foam::heHumidityRhoThermo<BasicPsiThermo, MixtureType>::calculate()
                 ppsi[facei] = thermoMixture.psi(pp[facei], pT[facei]);
                 ppsi[facei] = thermoMixture.psi(pp[facei], pT[facei]);
                 pmu[facei] = transportMixture.mu(pp[facei], pT[facei]);
-                palpha[facei] =
-                    transportMixture.kappa(pp[facei], pT[facei])
-                   /thermoMixture.Cp(pp[facei], pT[facei]);
+                pkappa[facei] = transportMixture.kappa(pp[facei], pT[facei]);
             }
         }
         else
@@ -143,9 +140,7 @@ void Foam::heHumidityRhoThermo<BasicPsiThermo, MixtureType>::calculate()
                 pCv[facei] = thermoMixture.Cv(pp[facei], pT[facei]);
                 ppsi[facei] = thermoMixture.psi(pp[facei], pT[facei]);
                 pmu[facei] = transportMixture.mu(pp[facei], pT[facei]);
-                palpha[facei] =
-                    transportMixture.kappa(pp[facei], pT[facei])
-                   /thermoMixture.Cp(pp[facei], pT[facei]);
+                pkappa[facei] = transportMixture.kappa(pp[facei], pT[facei]);
             }
         }
     }

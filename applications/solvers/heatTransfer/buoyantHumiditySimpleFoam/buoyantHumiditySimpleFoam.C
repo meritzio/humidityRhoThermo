@@ -32,7 +32,7 @@ Description
 
 #include "fvCFD.H"
 #include "humidityRhoThermo.H"
-#include "momentumTransportModel.H"
+#include "compressibleMomentumTransportModel.H"
 #include "fluidThermophysicalTransportModel.H"
 #include "radiationModel.H"
 #include "simpleControl.H"
