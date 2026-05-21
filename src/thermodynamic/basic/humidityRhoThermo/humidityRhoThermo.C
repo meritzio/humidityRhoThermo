@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2021 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2022 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,34 +56,6 @@ Foam::humidityRhoThermo::implementation::implementation
         ),
         mesh,
         dimDensity
-    ),
-
-    psi_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:psi", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionSet(0, -2, 2, 0, 0)
-    ),
-
-    mu_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:mu", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionSet(1, -1, -1, 0, 0)
     ),
 
     relHum_
@@ -242,34 +214,6 @@ Foam::humidityRhoThermo::implementation::implementation
         ),
         mesh,
         dimDensity
-    ),
-
-    psi_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:psi", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionSet(0, -2, 2, 0, 0)
-    ),
-
-    mu_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:mu", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionSet(1, -1, -1, 0, 0)
     ),
 
     relHum_
@@ -447,45 +391,21 @@ Foam::tmp<Foam::scalarField> Foam::humidityRhoThermo::implementation::rho
     return rho_.boundaryField()[patchi];
 }
 
+Foam::tmp<Foam::volScalarField> Foam::humidityRhoThermo::implementation::renameRho()
+{
+    rho_.rename(phasePropertyName(Foam::typedName<humidityRhoThermo>("rho")));
+    return rho_;
+}
 
 Foam::volScalarField& Foam::humidityRhoThermo::implementation::rho()
 {
     return rho_;
 }
 
-
-Foam::tmp<Foam::volScalarField> Foam::humidityRhoThermo::implementation::rho0() const
-{
-    return rho_.oldTime();
-}
-
-
 void Foam::humidityRhoThermo::implementation::correctRho(const volScalarField& deltaRho)
 {
     rho_ += deltaRho;
 }
-
-
-const Foam::volScalarField& Foam::humidityRhoThermo::implementation::psi() const
-{
-    return psi_;
-}
-
-
-Foam::tmp<Foam::volScalarField> Foam::humidityRhoThermo::implementation::mu() const
-{
-    return mu_;
-}
-
-
-Foam::tmp<Foam::scalarField> Foam::humidityRhoThermo::implementation::mu
-(
-    const label patchi
-) const
-{
-    return mu_.boundaryField()[patchi];
-}
-
 
 void Foam::humidityRhoThermo::implementation::readMethod()
 {
@@ -496,8 +416,8 @@ void Foam::humidityRhoThermo::implementation::readMethod()
             this->rho_.mesh().lookupObject<IOList<word>>("methodName")[0];
     }
 
-    Info<< "Saturation pressure calculation based on "
-        << method_ << "\n" << endl;
+    Info << "Saturation pressure calculation based on "
+         << method_ << "\n" << endl;
 }
 
 
@@ -506,8 +426,8 @@ void Foam::humidityRhoThermo::implementation::readOrInitSpecificHumidity()
     // specificHumidity field is available and was read before
     if (specificHumidity_.headerOk())
     {
-        Info<< "Initilize humidity by using the thermo:specificHumidity field\n"
-            << endl;
+        Info << "Initilize humidity by using the thermo:specificHumidity field\n"
+             << endl;
 
         return;
     }

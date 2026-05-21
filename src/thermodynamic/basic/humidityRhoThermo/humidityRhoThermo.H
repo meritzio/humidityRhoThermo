@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2021 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2022 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -104,27 +104,14 @@ public:
             //- Density for patch [kg/m^3]
             virtual tmp<scalarField> rho(const label patchi) const = 0;
 
-            //- Return non-const access to the local density field [kg/m^3]
-            virtual volScalarField& rho() = 0;
-
-            //- Old-time density [kg/m^3]
-            virtual tmp<volScalarField> rho0() const = 0;
+            //- Rename and return the thermodynamic density field [kg/m^3]
+            //  This is used by solvers which create a separate continuity rho
+            virtual tmp<volScalarField> renameRho() = 0;
 
             //- Add the given density correction to the density field.
             //  Used to update the density field following pressure solution
             virtual void correctRho(const volScalarField& deltaRho) = 0;
 
-            //- Compressibility [s^2/m^2]
-            virtual const volScalarField& psi() const = 0;
-
-
-        // Access to transport state variables
-
-            //- Dynamic viscosity of mixture [kg/m/s]
-            virtual tmp<volScalarField> mu() const = 0;
-
-            //- Dynamic viscosity of mixture for patch [kg/m/s]
-            virtual tmp<scalarField> mu(const label patchi) const = 0;
 };
 
 
@@ -141,14 +128,8 @@ protected:
     // Protected data
 
         //- Density field [kg/m^3]
-        //  Named 'thermo:rho' to avoid (potential) conflict with solver density
+        //  Named 'rho' to avoid (potential) conflict with solver density
         volScalarField rho_;
-
-        //- Compressibility [s^2/m^2]
-        volScalarField psi_;
-
-        //- Dynamic viscosity [kg/m/s]
-        volScalarField mu_;
     
         //- Relative humidity [-]
         volScalarField relHum_;
@@ -212,27 +193,16 @@ public:
             //- Density for patch [kg/m^3]
             virtual tmp<scalarField> rho(const label patchi) const;
 
+            //- Rename and return the thermodynamic density field [kg/m^3]
+            //  This is used by solvers which create a separate continuity rho
+            virtual tmp<volScalarField> renameRho();
+
             //- Return non-const access to the local density field [kg/m^3]
             virtual volScalarField& rho();
-
-            //- Old-time density [kg/m^3]
-            virtual tmp<volScalarField> rho0() const;
 
             //- Add the given density correction to the density field.
             //  Used to update the density field following pressure solution
             virtual void correctRho(const volScalarField& deltaRho);
-
-            //- Compressibility [s^2/m^2]
-            virtual const volScalarField& psi() const;
-
-
-        // Access to transport state variables
-
-            //- Dynamic viscosity of mixture [kg/m/s]
-            virtual tmp<volScalarField> mu() const;
-
-            //- Dynamic viscosity of mixture for patch [kg/m/s]
-            virtual tmp<scalarField> mu(const label patchi) const;
 
         // Read
 

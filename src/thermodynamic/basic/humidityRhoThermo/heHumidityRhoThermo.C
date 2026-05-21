@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2020 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2022 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,7 +27,10 @@ License
 #include "fvMatricesFwd.H"
 #include "fvModels.H"
 #include "fvConstraints.H"
-#include "fvCFD.H"
+#include "fvMesh.H"
+#include "fvc.H"
+#include "fvMatrices.H"
+#include "fvm.H"
 #include "bound.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -474,7 +477,7 @@ specificHumidityTransport()
         muEff = mu;
     }
 
-    // fvOptions has been replaced by fvConstraints and fvMoldels
+    // fvOptions has been replaced by fvConstraints and fvModels
     const Foam::fvModels& fvModels(Foam::fvModels::New(phi.mesh()));
     const Foam::fvConstraints& fvConstraints
     (

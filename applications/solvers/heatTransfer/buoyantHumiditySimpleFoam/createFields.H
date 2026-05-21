@@ -2,6 +2,7 @@ Info<< "Reading thermophysical properties\n" << endl;
 
 autoPtr<humidityRhoThermo> pThermo(humidityRhoThermo::New(mesh));
 humidityRhoThermo& thermo = pThermo();
+
 thermo.validate(args.executable(), "h", "e");
 
 volScalarField rho
@@ -48,15 +49,33 @@ autoPtr<compressible::momentumTransportModel> turbulence
 );
 
 Info<< "Creating thermophysical transport model\n" << endl;
-autoPtr<fluidThermophysicalTransportModel> thermophysicalTransport
+autoPtr<fluidThermoThermophysicalTransportModel> thermophysicalTransport
 (
-    fluidThermophysicalTransportModel::New(turbulence(), thermo)
+    fluidThermoThermophysicalTransportModel::New(turbulence(), thermo)
 );
 
 
 #include "readGravitationalAcceleration.H"
-#include "readhRef.H"
-#include "gh.H"
+
+Info << "\nReading hRef" << endl;
+
+uniformDimensionedScalarField hRef
+(
+    IOobject
+    (
+        "hRef",
+        runTime.constant(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::NO_WRITE
+    ),
+    dimensionedScalar(dimLength, 0)
+);
+
+Info << "Calculating field g.h\n" << endl;
+dimensionedScalar ghRef(- mag(g)*hRef);
+volScalarField gh("gh", (g & mesh.C()) - ghRef);
+surfaceScalarField ghf("ghf", (g & mesh.Cf()) - ghRef);
 
 Info<< "Reading field p_rgh\n" << endl;
 volScalarField p_rgh

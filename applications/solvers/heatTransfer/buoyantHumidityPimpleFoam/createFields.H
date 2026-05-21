@@ -1,5 +1,3 @@
-#include "createRDeltaT.H"
-
 Info<< "Reading thermophysical properties\n" << endl;
 
 autoPtr<humidityRhoThermo> pThermo
@@ -53,17 +51,48 @@ autoPtr<compressible::momentumTransportModel> turbulence
 );
 
 Info<< "Creating thermophysical transport model\n" << endl;
-autoPtr<fluidThermophysicalTransportModel> thermophysicalTransport
+autoPtr<fluidThermoThermophysicalTransportModel> thermophysicalTransport
 (
-    fluidThermophysicalTransportModel::New(turbulence(), thermo)
+    fluidThermoThermophysicalTransportModel::New(turbulence(), thermo)
 );
 
 
 #include "readGravitationalAcceleration.H"
-#include "readhRef.H"
-#include "gh.H"
-#include "readpRef.H"
 
+Info << "\nReading hRef" << endl;
+
+uniformDimensionedScalarField hRef
+(
+    IOobject
+    (
+        "hRef",
+        runTime.constant(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::NO_WRITE
+    ),
+    dimensionedScalar(dimLength, 0)
+);
+
+Info << "Calculating field g.h\n" << endl;
+dimensionedScalar ghRef(- mag(g)*hRef);
+volScalarField gh("gh", (g & mesh.C()) - ghRef);
+surfaceScalarField ghf("ghf", (g & mesh.Cf()) - ghRef);
+
+Info<< "\nReading pRef" << endl;
+
+uniformDimensionedScalarField pRef
+(
+    IOobject
+    (
+        "pRef",
+        runTime.constant(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::NO_WRITE
+    ),
+    dimensionedScalar(dimPressure, 0)
+);
 
 Info<< "Reading field p_rgh\n" << endl;
 volScalarField p_rgh
@@ -123,4 +152,40 @@ dimensionedScalar initialMass = fvc::domainIntegrate(rho);
 #include "createMRF.H"
 #include "createFvModels.H"
 #include "createFvConstraints.H"
-#include "checkRadiationModel.H"
+
+if (!mesh.foundObject<IOdictionary>("radiationProperties"))
+{
+    typeIOobject<IOdictionary> radiationProperties
+    (
+        "radiationProperties",
+        runTime.constant(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::NO_WRITE,
+        false
+    );
+
+    if (radiationProperties.headerOk())
+    {
+        const word modelType
+        (
+            IOdictionary(radiationProperties).lookup("radiationModel")
+        );
+
+        if (modelType != "none")
+        {
+            FatalErrorInFunction
+                << "Radiation model " << modelType
+                << " selected but not enabled in fvModels" << nl
+                << "To enable radiation add " << nl << nl
+                << "radiation" << nl
+                << "{" << nl
+                << "    type    radiation;" << nl
+                << "    libs    (\"libradiationModels.so\");" << nl
+                << "}" << nl << nl
+                << "to " << radiationProperties.relativePath()/"fvModels"
+                << exit(FatalError);
+        }
+    }
+}
+

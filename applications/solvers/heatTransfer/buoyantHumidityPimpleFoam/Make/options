@@ -1,25 +1,28 @@
 EXE_INC = \
-    -I$(FOAM_APP)/solvers/compressible/rhoPimpleFoam \
     -I$(LIB_SRC)/physicalProperties/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/basic/lnInclude \
+    -I$(LIB_SRC)/radiationModels/lnInclude \
     -I$(LIB_SRC)/MomentumTransportModels/momentumTransportModels/lnInclude \
     -I$(LIB_SRC)/MomentumTransportModels/compressible/lnInclude \
-    -I$(LIB_SRC)/ThermophysicalTransportModels/lnInclude \
+    -I$(LIB_SRC)/ThermophysicalTransportModels/thermophysicalTransportModel/lnInclude \
+    -I$(LIB_SRC)/ThermophysicalTransportModels/fluid/lnInclude \
+    -I$(LIB_SRC)/ThermophysicalTransportModels/fluidThermo/lnInclude \
     -I$(LIB_SRC)/finiteVolume/cfdTools \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
-    -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/sampling/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(realpath ../../../../src/thermodynamic/basic/lnInclude)
 
 EXE_LIBS = \
+    -lphysicalProperties \
     -lfluidThermophysicalModels \
     -lspecie \
     -lmomentumTransportModels \
+    -lradiationModels \
     -lcompressibleMomentumTransportModels \
-    -lthermophysicalTransportModels \
     -lfiniteVolume \
-    -lmeshTools \
     -lsampling \
+    -lmeshTools \
     -lfvModels \
     -lfvConstraints \
     -L$(FOAM_USER_LIBBIN) \

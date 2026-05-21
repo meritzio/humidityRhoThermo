@@ -30,14 +30,34 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "fvCFD.H"
+#include "argList.H"
+#include "timeSelector.H"
+#include "pressureReference.H"
+#include "findRefCell.H"
+#include "constrainPressure.H"
+#include "constrainHbyA.H"
+#include "adjustPhi.H"
+#include "uniformDimensionedFields.H"
+
 #include "humidityRhoThermo.H"
 #include "compressibleMomentumTransportModel.H"
-#include "fluidThermophysicalTransportModel.H"
+#include "fluidThermoThermophysicalTransportModel.H"
 #include "radiationModel.H"
 #include "simpleControl.H"
 #include "fvModels.H"
 #include "fvConstraints.H"
+
+#include "fvcDdt.H"
+#include "fvcGrad.H"
+#include "fvcFlux.H"
+#include "fvcVolumeIntegrate.H"
+#include "fvcReconstruct.H"
+
+#include "fvmDdt.H"
+#include "fvmDiv.H"
+#include "fvmLaplacian.H"
+
+using namespace Foam;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -45,7 +65,7 @@ int main(int argc, char *argv[])
 {
     #include "postProcess.H"
 
-    #include "setRootCaseLists.H"
+    #include "setRootCase.H"
     #include "createTime.H"
     #include "createMesh.H"
     #include "createControl.H"

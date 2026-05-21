@@ -19,10 +19,7 @@ surfaceScalarField phiHbyA
 (
     "phiHbyA",
     fvc::interpolate(rho)*fvc::flux(HbyA)
-  + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi, rhoUf))
 );
-
-MRF.makeRelative(fvc::interpolate(rho), phiHbyA);
 
 bool adjustMass = mesh.schemes().steady() && adjustPhi(phiHbyA, U, p_rgh);
 
@@ -31,7 +28,7 @@ surfaceScalarField phig(-rhorAUf*ghf*fvc::snGrad(rho)*mesh.magSf());
 phiHbyA += phig;
 
 // Update the pressure BCs to ensure flux consistency
-constrainPressure(p_rgh, rho, U, phiHbyA, rhorAUf, MRF);
+constrainPressure(p_rgh, rho, U, phiHbyA, rhorAUf);
 
 fvc::makeRelative(phiHbyA, rho, U);
 
@@ -119,7 +116,6 @@ else
     }
 
     #include "rhoEqn.H"
-    #include "compressibleContinuityErrs.H"
 }
 
 // Correct the momentum source with the pressure gradient flux

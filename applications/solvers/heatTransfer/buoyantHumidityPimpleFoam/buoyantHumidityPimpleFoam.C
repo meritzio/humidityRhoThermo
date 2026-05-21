@@ -34,41 +34,78 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "fvCFD.H"
+#include "argList.H"
+#include "timeSelector.H"
+#include "pressureReference.H"
+#include "findRefCell.H"
+#include "constrainPressure.H"
+#include "constrainHbyA.H"
+#include "adjustPhi.H"
+
+#include "fvc.H"
+#include "fvcDdt.H"
+#include "fvcGrad.H"
+#include "fvcFlux.H"
+#include "fvcVolumeIntegrate.H"
+#include "fvcReconstruct.H"
+#include "fvcSmooth.H"
+
+#include "fvc.H"
+#include "fvmDdt.H"
+#include "fvmDiv.H"
+#include "fvmLaplacian.H"
+
 #include "humidityRhoThermo.H"
 #include "compressibleMomentumTransportModels.H"
-#include "fluidThermophysicalTransportModel.H"
+#include "fluidThermoThermophysicalTransportModel.H"
 #include "pimpleControl.H"
-#include "pressureReference.H"
 #include "hydrostaticInitialisation.H"
-#include "CorrectPhi.H"
+#include "adjustPhi.H"
 #include "fvModels.H"
 #include "fvConstraints.H"
 #include "localEulerDdtScheme.H"
-#include "fvcSmooth.H"
+
+using namespace Foam;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 int main(int argc, char *argv[])
 {
+    argList args(argc, argv);
+
     #include "postProcess.H"
 
-    #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createMesh.H"
     #include "createDyMControls.H"
     #include "initContinuityErrs.H"
     #include "createFields.H"
     #include "createFieldRefs.H"
-    #include "createRhoUfIfPresent.H"
+
+    autoPtr<surfaceVectorField> rhoUf;
+
+    if (mesh.dynamic())
+    {
+        Info<< "Constructing face momentum rhoUf" << endl;
+
+        rhoUf = new surfaceVectorField
+        (
+            IOobject
+            (
+                "rhoUf",
+                runTime.timeName(),
+                mesh,
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE
+            ),
+            fvc::interpolate(rho*U)
+        );
+    }
 
     turbulence->validate();
 
-    if (!LTS)
-    {
-        #include "compressibleCourantNo.H"
-        #include "setInitialDeltaT.H"
-    }
+    #include "compressibleCourantNo.H"
+    #include "setInitialDeltaT.H"
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -81,6 +118,7 @@ int main(int argc, char *argv[])
         // Store divrhoU from the previous mesh so that it can be mapped
         // and used in correctPhi to ensure the corrected phi has the
         // same divergence
+        //
         autoPtr<volScalarField> divrhoU;
         if (correctPhi)
         {
@@ -91,15 +129,8 @@ int main(int argc, char *argv[])
             );
         }
 
-        if (LTS)
-        {
-            #include "setRDeltaT.H"
-        }
-        else
-        {
-            #include "compressibleCourantNo.H"
-            #include "setDeltaT.H"
-        }
+        #include "compressibleCourantNo.H"
+        #include "setDeltaT.H"
 
         fvModels.preUpdateMesh();
 
@@ -113,27 +144,6 @@ int main(int argc, char *argv[])
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
-            if (pimple.firstPimpleIter() || moveMeshOuterCorrectors)
-            {
-                // Move the mesh
-                mesh.move();
-
-                if (mesh.changing())
-                {
-                    MRF.update();
-
-                    if (correctPhi)
-                    {
-                        #include "correctPhi.H"
-                    }
-
-                    if (checkMeshCourantNo)
-                    {
-                        #include "meshCourantNo.H"
-                    }
-                }
-	    }
-
             if
             (
                    !mesh.schemes().steady()
@@ -155,11 +165,8 @@ int main(int argc, char *argv[])
                 #include "pEqn.H"
             }
 
-            if (pimple.turbCorr())
-            {
-                turbulence->correct();
-                thermophysicalTransport->correct();
-            }
+            turbulence->correct();
+            thermophysicalTransport->correct();
         }
 
         if (!mesh.schemes().steady())
