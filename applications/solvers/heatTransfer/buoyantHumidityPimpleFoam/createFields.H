@@ -14,7 +14,7 @@ volScalarField rho
     IOobject
     (
         "rho",
-        runTime.timeName(),
+        runTime.name(),
         mesh,
         IOobject::NO_READ,
         IOobject::NO_WRITE
@@ -28,7 +28,7 @@ volVectorField U
     IOobject
     (
         "U",
-        runTime.timeName(),
+        runTime.name(),
         mesh,
         IOobject::MUST_READ,
         IOobject::AUTO_WRITE
@@ -100,7 +100,7 @@ volScalarField p_rgh
     IOobject
     (
         "p_rgh",
-        runTime.timeName(),
+        runTime.name(),
         mesh,
         IOobject::MUST_READ,
         IOobject::AUTO_WRITE
@@ -137,7 +137,7 @@ volScalarField dpdt
     IOobject
     (
         "dpdt",
-        runTime.timeName(),
+        runTime.name(),
         mesh
     ),
     mesh,

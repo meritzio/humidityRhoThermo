@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2021 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2023 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ License
 #include "fvPatchFieldMapper.H"
 #include "volFields.H"
 #include "humidityRhoThermo.H"
-#include "basicThermo.H"
+#include "fluidThermo.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fixedHumidityFvPatchScalarField.H"
 
@@ -50,7 +50,7 @@ fixedHumidityFvPatchScalarField
         IOobject
         (
             "methodName",
-            p.boundaryMesh().mesh().time().timeName(),
+            p.boundaryMesh().mesh().time().name(),
             p.boundaryMesh().mesh(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -65,10 +65,11 @@ fixedHumidityFvPatchScalarField
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
-    const dictionary& dict
+    const dictionary& dict,
+    const bool valueRequired
 )
 :
-    fixedValueFvPatchScalarField(p, iF, dict),
+    fixedValueFvPatchScalarField(p, iF, dict, valueRequired),
     mode_(dict.lookupOrDefault<word>("mode", "relative")),
     method_(dict.lookupOrDefault<word>("method", "buck")),
     value_(readScalar(dict.lookup("humidity"))),
@@ -77,7 +78,7 @@ fixedHumidityFvPatchScalarField
         IOobject
         (
             "methodName",
-            p.boundaryMesh().mesh().time().timeName(),
+            p.boundaryMesh().mesh().time().name(),
             p.boundaryMesh().mesh(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -128,10 +129,11 @@ fixedHumidityFvPatchScalarField
     const fixedHumidityFvPatchScalarField& ptf,
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
-    const fvPatchFieldMapper& mapper
+    const fvPatchFieldMapper& mapper,
+    const bool mappingRequired
 )
 :
-    fixedValueFvPatchScalarField(ptf, p, iF, mapper),
+    fixedValueFvPatchScalarField(ptf, p, iF, mapper, mappingRequired),
     mode_(ptf.mode_),
     method_(ptf.method_),
     value_(ptf.value_),

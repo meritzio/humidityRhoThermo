@@ -41,7 +41,7 @@ if (simple.transonic())
             fvc::div(phiHbyA) + fvm::div(phid, p_rgh)
           - fvm::laplacian(rhorAUf, p_rgh)
          ==
-            fvModels.source(psi, p_rgh, rho.name());
+            fvModels.sourceProxy(rho, p_rgh);
 
         // Relax the pressure equation to ensure diagonal-dominance
         p_rghEqn.relax();
@@ -63,7 +63,7 @@ else
             fvc::div(phiHbyA)
           - fvm::laplacian(rhorAUf, p_rgh)
           ==
-            fvModels.source(psi, p_rgh, rho.name());
+            fvModels.sourceProxy(rho, p_rgh);
 
         p_rghEqn.setReference
         (

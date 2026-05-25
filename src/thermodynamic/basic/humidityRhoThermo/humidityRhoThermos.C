@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2022 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2023 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,21 +24,21 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "humidityRhoThermo.H"
-#include "heHumidityRhoThermo.H"
 #include "pureMixture.H"
 
 #include "forGases.H"
 #include "forLiquids.H"
 #include "forTabulated.H"
-#include "makeThermo.H"
+
+#include "makeFluidThermo.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-    forGases(makeThermo, humidityRhoThermo, heHumidityRhoThermo, pureMixture);
-    forLiquids(makeThermo, humidityRhoThermo, heHumidityRhoThermo, pureMixture);
-    forTabulated(makeThermo, humidityRhoThermo, heHumidityRhoThermo, pureMixture);
+    forGases(makeFluidThermo, humidityRhoThermo, pureMixture);
+    forLiquids(makeFluidThermo, humidityRhoThermo, pureMixture);
+    forTabulated(makeFluidThermo, humidityRhoThermo, pureMixture);
 }
 
 // ************************************************************************* //

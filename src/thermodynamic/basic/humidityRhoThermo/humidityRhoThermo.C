@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2022 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2023 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,8 +24,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "humidityRhoThermo.H"
-#include "volFields.H"
-#include "fixedHumidityFvPatchScalarField.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -35,170 +33,15 @@ namespace Foam
     defineRunTimeSelectionTable(humidityRhoThermo, fvMesh);
 }
 
+const Foam::word Foam::humidityRhoThermo::derivedThermoName("HumidityRhoThermo");
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::humidityRhoThermo::implementation::implementation
 (
-    const fvMesh& mesh,
-    const word& phaseName
-)
-:
-    rho_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:rho", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimDensity
-    ),
-
-    relHum_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:relHum", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::READ_IF_PRESENT,
-            IOobject::AUTO_WRITE
-        ),
-        mesh,
-        dimless
-    ),
-
-    waterMass_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:waterMass", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimMass
-    ),
-
-    waterVapor_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:waterVapor", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimDensity
-    ),
-
-    maxWaterVapor_
-    (
-        IOobject
-        (
-            phasePropertyName("maxWaterVapor", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimDensity
-    ),
-
-    specificHumidity_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:specificHumidity", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::READ_IF_PRESENT,
-            IOobject::AUTO_WRITE
-        ),
-        mesh,
-        dimless
-    ),
-
-    maxSpecificHumidity_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:maxSpecificHumidity", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimless
-    ),
-
-    pSatH2O_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:pSatH2O", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimPressure
-    ),
-
-    partialPressureH2O_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:partialPressureH2O", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimPressure
-    ),
-
-    method_("buck"),
-
-    initWithRelHumidity_(false),
-
-    muEff_
-    (
-        IOobject
-        (
-            phasePropertyName("thermo:muEff", phaseName),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionSet(1,-1,-1,0,0,0,0)
-    )
-{
-    // Read or build the specificHumidity field
-    readOrInitSpecificHumidity();
-
-    readMethod();
-}
-
-
-Foam::humidityRhoThermo::implementation::implementation
-(
-    const fvMesh& mesh,
     const dictionary& dict,
+    const fvMesh& mesh,
     const word& phaseName
 )
 :
@@ -207,7 +50,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("thermo:rho", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -221,7 +64,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("thermo:relHum", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::READ_IF_PRESENT,
             IOobject::AUTO_WRITE
@@ -235,7 +78,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("thermo:waterMass", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -249,7 +92,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("thermo:waterVapor", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -263,7 +106,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("maxWaterVapor", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -277,7 +120,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("thermo:specificHumidity", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::READ_IF_PRESENT,
             IOobject::AUTO_WRITE
@@ -291,7 +134,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("thermo:maxSpecificHumidity", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -305,7 +148,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("thermo:pSatH2O", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -319,7 +162,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("thermo:partialPressureH2O", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -337,7 +180,7 @@ Foam::humidityRhoThermo::implementation::implementation
         IOobject
         (
             phasePropertyName("thermo:muEff", phaseName),
-            mesh.time().timeName(),
+            mesh.time().name(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
@@ -364,7 +207,6 @@ Foam::autoPtr<Foam::humidityRhoThermo> Foam::humidityRhoThermo::New
     return basicThermo::New<humidityRhoThermo>(mesh, phaseName);
 }
 
-
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::humidityRhoThermo::~humidityRhoThermo()
@@ -376,6 +218,18 @@ Foam::humidityRhoThermo::implementation::~implementation()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+Foam::tmp<Foam::volScalarField> Foam::humidityRhoThermo::renameRho()
+{
+    rho().rename(phasePropertyName(Foam::typedName<humidityRhoThermo>("rho")));
+    return rho();
+}
+
+
+void Foam::humidityRhoThermo::correctRho(const volScalarField& deltaRho)
+{
+    rho() += deltaRho;
+}
 
 Foam::tmp<Foam::volScalarField> Foam::humidityRhoThermo::implementation::rho() const
 {
@@ -391,21 +245,12 @@ Foam::tmp<Foam::scalarField> Foam::humidityRhoThermo::implementation::rho
     return rho_.boundaryField()[patchi];
 }
 
-Foam::tmp<Foam::volScalarField> Foam::humidityRhoThermo::implementation::renameRho()
-{
-    rho_.rename(phasePropertyName(Foam::typedName<humidityRhoThermo>("rho")));
-    return rho_;
-}
 
 Foam::volScalarField& Foam::humidityRhoThermo::implementation::rho()
 {
     return rho_;
 }
 
-void Foam::humidityRhoThermo::implementation::correctRho(const volScalarField& deltaRho)
-{
-    rho_ += deltaRho;
-}
 
 void Foam::humidityRhoThermo::implementation::readMethod()
 {

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2022 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2023 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,7 +28,7 @@ Description
     Base-class for fluid thermodynamic properties based on density.
 
 See also
-    Foam::basicThermo
+    Foam::fluidThermo
 
 SourceFiles
     humidityRhoThermo.C
@@ -38,8 +38,9 @@ SourceFiles
 #ifndef humidityRhoThermo_H
 #define humidityRhoThermo_H
 
+#include "HumidityRhoThermo.H"
+#include "pureThermo.H"
 #include "fluidThermo.H"
-#include "runTimeSelectionTables.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -64,10 +65,18 @@ public:
         //- Forward declare the composite class
         class composite;
 
+    // Public Typedefs
+
+        //- The derived type
+        template<class MixtureType>
+        using DerivedThermoType =
+            HumidityRhoThermo<BasicThermo<MixtureType, composite>>;
+
+        //- The derived name
+        static const word derivedThermoName;
 
     //- Runtime type information
     TypeName("humidityRhoThermo");
-
 
     //- Declare run-time constructor selection table
     declareRunTimeSelectionTable
@@ -79,13 +88,12 @@ public:
         (mesh, phaseName)
     );
 
-
     // Selectors
 
         //- Standard selection based on fvMesh
         static autoPtr<humidityRhoThermo> New
         (
-            const fvMesh&,
+            const fvMesh& mesh,
             const word& phaseName=word::null
         );
 
@@ -104,14 +112,16 @@ public:
             //- Density for patch [kg/m^3]
             virtual tmp<scalarField> rho(const label patchi) const = 0;
 
-            //- Rename and return the thermodynamic density field [kg/m^3]
+            //- Return the thermodynamic density field [kg/m^3]
             //  This is used by solvers which create a separate continuity rho
-            virtual tmp<volScalarField> renameRho() = 0;
+            virtual tmp<volScalarField> renameRho();
+
+            //- Return non-const access to the local density field [kg/m^3]
+            virtual volScalarField& rho() = 0;
 
             //- Add the given density correction to the density field.
-            //  Used to update the density field following pressure solution
-            virtual void correctRho(const volScalarField& deltaRho) = 0;
-
+            //  Used to update the density field following pressure solution.
+            virtual void correctRho(const volScalarField& deltaRho);
 };
 
 
@@ -169,11 +179,8 @@ public:
 
     // Constructors
 
-        //- Construct from mesh and phase name
-        implementation(const fvMesh&, const word& phaseName);
-
-        //- Construct from mesh, dictionary and phase name
-        implementation(const fvMesh&, const dictionary&, const word& phaseName);
+        //- Construct from dictionary, mesh  and phase name
+        implementation(const dictionary&, const fvMesh&, const word& phaseName);
 
         //- Disallow default bitwise copy construction
         implementation(const implementation&) = delete;
@@ -193,16 +200,8 @@ public:
             //- Density for patch [kg/m^3]
             virtual tmp<scalarField> rho(const label patchi) const;
 
-            //- Rename and return the thermodynamic density field [kg/m^3]
-            //  This is used by solvers which create a separate continuity rho
-            virtual tmp<volScalarField> renameRho();
-
             //- Return non-const access to the local density field [kg/m^3]
             virtual volScalarField& rho();
-
-            //- Add the given density correction to the density field.
-            //  Used to update the density field following pressure solution
-            virtual void correctRho(const volScalarField& deltaRho);
 
         // Read
 
@@ -218,12 +217,15 @@ public:
 
 
 /*---------------------------------------------------------------------------*\
-                    Class humidityRhoThermo::composite Declaration
+                 Class humidityRhoThermo::composite Declaration
 \*---------------------------------------------------------------------------*/
+
+
 
 class humidityRhoThermo::composite
 :
     public basicThermo::implementation,
+    public pureThermo,
     public fluidThermo::implementation,
     public humidityRhoThermo::implementation
 {
@@ -231,19 +233,21 @@ public:
 
     // Constructors
 
-        //- Construct from mesh and phase name
+        //- Construct from dictionary, mesh and phase name
+        template<class MixtureType>
         composite
         (
-            const fvMesh& mesh,
-            const word& phaseName
+             const dictionary& dict,
+             const MixtureType& mixture,
+             const fvMesh& mesh,
+             const word& phaseName
         )
         :
-            basicThermo::implementation(mesh, phaseName),
-            fluidThermo::implementation(mesh, phaseName),
-            humidityRhoThermo::implementation(mesh, phaseName)
+            basicThermo::implementation(dict, mesh, phaseName),
+            fluidThermo::implementation(dict, mesh, phaseName),
+            humidityRhoThermo::implementation(dict, mesh, phaseName)
         {}
 };
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
