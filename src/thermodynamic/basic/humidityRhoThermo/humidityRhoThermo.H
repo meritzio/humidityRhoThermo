@@ -75,7 +75,7 @@ public:
         //- The derived name
         static word derivedThermoName()
         {
-            return "HumidityRhoThermo";
+            return "heHumidityRhoThermo";
         }
 
     //- Runtime type information

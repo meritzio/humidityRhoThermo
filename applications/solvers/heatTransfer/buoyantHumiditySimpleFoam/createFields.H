@@ -95,8 +95,15 @@ label pRefCell(0);
 scalar pRefValue(0.0);
 setRefCell(p, p_rgh, simple.dict(), pRefCell, pRefValue);
 
+dimensionedScalar pRef
+(
+    "pRef",
+    p.dimensions(),
+    pRefValue
+);
+
 // Force p_rgh to be consistent with p
-p_rgh = p - rho*gh - pRefValue;
+p_rgh = p - rho*gh - pRef;
 
 mesh.schemes().setFluxRequired(p_rgh.name());
 
