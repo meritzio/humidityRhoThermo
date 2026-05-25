@@ -78,7 +78,7 @@ public:
 
     // Member Functions
 
-        //- Initialize the thermo:specificHumidity using the thermo:relHum field
+        //- Initialize the specificHumidity using the relHum field
         virtual void initialize();
 
         //- Update properties

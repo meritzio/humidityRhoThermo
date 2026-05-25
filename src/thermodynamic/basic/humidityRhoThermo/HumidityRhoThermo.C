@@ -577,7 +577,7 @@ initialSpecificHumidityFromRelHumidity()
         {
             FatalErrorInFunction
                 << "The boundary type '" << relHumBf[patchi].type() << "' "
-                << "for the thermo:relHum field is not allowed"
+                << "for the relHum field is not allowed"
                 << "Use the 'fixedHumidity' boundary condition instead"
                 << exit(FatalError);
         }

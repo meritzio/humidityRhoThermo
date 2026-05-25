@@ -32,7 +32,7 @@ divSchemes
     div(phi,h)      Gauss linear;
     div(phi,e)      Gauss linear;
     div(phi,K)      Gauss linear;
-    div(phi,thermo:specificHumidity)   Gauss linear;
+    div(phi,specificHumidity)   Gauss linear;
     div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
 }
 

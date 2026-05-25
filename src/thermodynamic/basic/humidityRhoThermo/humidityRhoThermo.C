@@ -47,7 +47,7 @@ Foam::humidityRhoThermo::implementation::implementation
     (
         IOobject
         (
-            phasePropertyName("thermo:rho", phaseName),
+            phasePropertyName("rho", phaseName),
             mesh.time().name(),
             mesh,
             IOobject::NO_READ,
@@ -61,7 +61,7 @@ Foam::humidityRhoThermo::implementation::implementation
     (
         IOobject
         (
-            phasePropertyName("thermo:relHum", phaseName),
+            phasePropertyName("relHum", phaseName),
             mesh.time().name(),
             mesh,
             IOobject::READ_IF_PRESENT,
@@ -75,7 +75,7 @@ Foam::humidityRhoThermo::implementation::implementation
     (
         IOobject
         (
-            phasePropertyName("thermo:waterMass", phaseName),
+            phasePropertyName("waterMass", phaseName),
             mesh.time().name(),
             mesh,
             IOobject::NO_READ,
@@ -89,7 +89,7 @@ Foam::humidityRhoThermo::implementation::implementation
     (
         IOobject
         (
-            phasePropertyName("thermo:waterVapor", phaseName),
+            phasePropertyName("waterVapor", phaseName),
             mesh.time().name(),
             mesh,
             IOobject::NO_READ,
@@ -117,7 +117,7 @@ Foam::humidityRhoThermo::implementation::implementation
     (
         IOobject
         (
-            phasePropertyName("thermo:specificHumidity", phaseName),
+            phasePropertyName("specificHumidity", phaseName),
             mesh.time().name(),
             mesh,
             IOobject::READ_IF_PRESENT,
@@ -131,7 +131,7 @@ Foam::humidityRhoThermo::implementation::implementation
     (
         IOobject
         (
-            phasePropertyName("thermo:maxSpecificHumidity", phaseName),
+            phasePropertyName("maxSpecificHumidity", phaseName),
             mesh.time().name(),
             mesh,
             IOobject::NO_READ,
@@ -145,7 +145,7 @@ Foam::humidityRhoThermo::implementation::implementation
     (
         IOobject
         (
-            phasePropertyName("thermo:pSatH2O", phaseName),
+            phasePropertyName("pSatH2O", phaseName),
             mesh.time().name(),
             mesh,
             IOobject::NO_READ,
@@ -159,7 +159,7 @@ Foam::humidityRhoThermo::implementation::implementation
     (
         IOobject
         (
-            phasePropertyName("thermo:partialPressureH2O", phaseName),
+            phasePropertyName("partialPressureH2O", phaseName),
             mesh.time().name(),
             mesh,
             IOobject::NO_READ,
@@ -177,7 +177,7 @@ Foam::humidityRhoThermo::implementation::implementation
     (
         IOobject
         (
-            phasePropertyName("thermo:muEff", phaseName),
+            phasePropertyName("muEff", phaseName),
             mesh.time().name(),
             mesh,
             IOobject::NO_READ,
@@ -269,7 +269,7 @@ void Foam::humidityRhoThermo::implementation::readOrInitSpecificHumidity()
     // specificHumidity field is available and was read before
     if (specificHumidity_.headerOk())
     {
-        Info << "Initilize humidity by using the thermo:specificHumidity field\n"
+        Info << "Initilize humidity by using the specificHumidity field\n"
              << endl;
 
         return;
@@ -279,7 +279,7 @@ void Foam::humidityRhoThermo::implementation::readOrInitSpecificHumidity()
     if (!relHum_.headerOk())
     {
         FatalErrorInFunction
-            << "Neither the thermo:specificHumidity or the thermo:relHum "
+            << "Neither the specificHumidity or the relHum "
             << "field was provided in the time-folder"
             << exit(FatalError);
     }
@@ -287,7 +287,7 @@ void Foam::humidityRhoThermo::implementation::readOrInitSpecificHumidity()
     {
         initWithRelHumidity_ = true;
 
-        Info<< "Initilize humidity by using the thermo:relHum field\n"
+        Info<< "Initilize humidity by using the relHum field\n"
             << endl;
     }
 }
