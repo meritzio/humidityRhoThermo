@@ -15,6 +15,10 @@ OpenFOAM-6.x
 OpenFOAM-7.x
 OpenFOAM-v8
 OpenFOAM-v9
+OpenFOAM-v10
+OpenFOAM-v11
+OpenFOAM-v12
+OpenFOAM-v13
 OpenFOAM-v1712
 OpenFOAM-v1806
 OpenFOAM-v1812
