@@ -165,7 +165,7 @@ void Foam::fixedHumidityFvPatchScalarField::updateCoeffs()
     }
 
     const humidityRhoThermo& thermo =
-       this->db().lookupObject<humidityRhoThermo>("thermophysicalProperties");
+       this->db().lookupObject<humidityRhoThermo>("physicalProperties");
     
     const label patchi = patch().index();
 
