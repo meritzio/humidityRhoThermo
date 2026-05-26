@@ -34,8 +34,12 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
+#include "parRun.H"
+
+#include "OSspecific.H"
 #include "argList.H"
 #include "timeSelector.H"
+
 #include "pressureReference.H"
 #include "findRefCell.H"
 #include "constrainPressure.H"
@@ -71,41 +75,20 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
-    argList args(argc, argv);
-
     #include "postProcess.H"
 
+    #include "setRootCase.H"
     #include "createTime.H"
     #include "createMesh.H"
-    #include "createDyMControls.H"
-    #include "initContinuityErrs.H"
+    #include "createControl.H"
     #include "createFields.H"
     #include "createFieldRefs.H"
-
-    autoPtr<surfaceVectorField> rhoUf;
-
-    if (mesh.dynamic())
-    {
-        Info<< "Constructing face momentum rhoUf" << endl;
-
-        rhoUf = new surfaceVectorField
-        (
-            IOobject
-            (
-                "rhoUf",
-                runTime.name(),
-                mesh,
-                IOobject::READ_IF_PRESENT,
-                IOobject::AUTO_WRITE
-            ),
-            fvc::interpolate(rho*U)
-        );
-    }
-
-    turbulence->validate();
-
+    #include "initContinuityErrs.H"
+    #include "createTimeControls.H"
     #include "compressibleCourantNo.H"
     #include "setInitialDeltaT.H"
+
+    turbulence->validate();
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -113,22 +96,6 @@ int main(int argc, char *argv[])
 
     while (pimple.run(runTime))
     {
-        #include "readDyMControls.H"
-
-        // Store divrhoU from the previous mesh so that it can be mapped
-        // and used in correctPhi to ensure the corrected phi has the
-        // same divergence
-        //
-        autoPtr<volScalarField> divrhoU;
-        if (correctPhi)
-        {
-            divrhoU = new volScalarField
-            (
-                "divrhoU",
-                fvc::div(fvc::absolute(phi, rho, U))
-            );
-        }
-
         #include "compressibleCourantNo.H"
         #include "setDeltaT.H"
 
