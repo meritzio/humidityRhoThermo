@@ -4,6 +4,7 @@ EXE_INC = \
     -I$(LIB_SRC)/radiationModels/lnInclude \
     -I$(LIB_SRC)/MomentumTransportModels/momentumTransportModels/lnInclude \
     -I$(LIB_SRC)/MomentumTransportModels/compressible/lnInclude \
+    -I$(LIB_SRC)/ThermophysicalTransportModels/coupledThermophysicalTransportModels/lnInclude \
     -I$(LIB_SRC)/ThermophysicalTransportModels/thermophysicalTransportModel/lnInclude \
     -I$(LIB_SRC)/ThermophysicalTransportModels/fluid/lnInclude \
     -I$(LIB_SRC)/ThermophysicalTransportModels/fluidThermo/lnInclude \
@@ -19,6 +20,7 @@ EXE_LIBS = \
     -lspecie \
     -lmomentumTransportModels \
     -lradiationModels \
+    -lcoupledThermophysicalTransportModels \
     -lcompressibleMomentumTransportModels \
     -lfiniteVolume \
     -lsampling \
