@@ -287,6 +287,7 @@ void Foam::HumidityRhoThermo<BaseThermo>::pSatH2O()
 
         this->pSatH2O_ = pre1*exp((pre2*(theta))/(value1+theta));
     }
+
     //  Buck formula [1996]
     //  Valid between 0 to 100 degC and 1013.25 hPa
     //  Very accurate between 0 degC and 50 degC

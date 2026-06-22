@@ -22,40 +22,52 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    buoyantSimpleFoam
+    buoyantHumidityFoam
 
 Description
-    Steady-state solver for buoyant, turbulent flow of compressible fluids,
-    including radiation, for ventilation and heat-transfer.
+    Transient solver for buoyant, turbulent flow of compressible fluids for
+    ventilation and heat-transfer, with optional mesh motion and
+    mesh topology changes and humidity.
+
+    Uses the flexible PIMPLE (PISO-SIMPLE) solution for time-resolved and
+    pseudo-transient simulations.
 
 \*---------------------------------------------------------------------------*/
 
+#include "parRun.H"
+
+#include "OSspecific.H"
 #include "argList.H"
 #include "timeSelector.H"
+
 #include "pressureReference.H"
 #include "findRefCell.H"
 #include "constrainPressure.H"
 #include "constrainHbyA.H"
 #include "adjustPhi.H"
-#include "uniformDimensionedFields.H"
 
-#include "humidityRhoThermo.H"
-#include "compressibleMomentumTransportModel.H"
-#include "fluidThermoThermophysicalTransportModel.H"
-#include "radiationModel.H"
-#include "simpleControl.H"
-#include "fvModels.H"
-#include "fvConstraints.H"
-
+#include "fvc.H"
 #include "fvcDdt.H"
 #include "fvcGrad.H"
 #include "fvcFlux.H"
 #include "fvcVolumeIntegrate.H"
 #include "fvcReconstruct.H"
+#include "fvcSmooth.H"
 
+#include "fvc.H"
 #include "fvmDdt.H"
 #include "fvmDiv.H"
 #include "fvmLaplacian.H"
+
+#include "humidityRhoThermo.H"
+#include "compressibleMomentumTransportModels.H"
+#include "fluidThermoThermophysicalTransportModel.H"
+#include "pimpleControl.H"
+#include "hydrostaticInitialisation.H"
+#include "adjustPhi.H"
+#include "fvModels.H"
+#include "fvConstraints.H"
+#include "localEulerDdtScheme.H"
 
 using namespace Foam;
 
@@ -72,6 +84,9 @@ int main(int argc, char *argv[])
     #include "createFields.H"
     #include "createFieldRefs.H"
     #include "initContinuityErrs.H"
+    #include "createTimeControls.H"
+    #include "compressibleCourantNo.H"
+    #include "setInitialDeltaT.H"
 
     turbulence->validate();
 
@@ -79,19 +94,52 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
-    while (simple.loop(runTime))
+    while (pimple.run(runTime))
     {
+        #include "compressibleCourantNo.H"
+        #include "setDeltaT.H"
+
+        fvModels.preUpdateMesh();
+
+        // Update the mesh for topology change, mesh to mesh mapping
+        mesh.update();
+
+        runTime++;
+
         Info<< "Time = " << runTime.userTimeName() << nl << endl;
 
-        // Pressure-velocity SIMPLE corrector
+        // --- Pressure-velocity PIMPLE corrector loop
+        while (pimple.loop())
         {
+            if
+            (
+                   !mesh.schemes().steady()
+                && !pimple.simpleRho()
+                && pimple.firstPimpleIter()
+            )
+            {
+                #include "rhoEqn.H"
+            }
+
+            fvModels.correct();
+
             #include "UEqn.H"
             #include "EEqn.H"
-            #include "pEqn.H"
+
+            // --- Pressure corrector loop
+            while (pimple.correct())
+            {
+                #include "pEqn.H"
+            }
+
+            turbulence->correct();
+            thermophysicalTransport->correct();
         }
 
-        turbulence->correct();
-        thermophysicalTransport->correct();
+        if (!mesh.schemes().steady())
+        {
+            rho = thermo.rho();
+        }
 
         runTime.write();
 
